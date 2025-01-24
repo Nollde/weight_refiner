@@ -79,3 +79,16 @@ def apply_resampler(*data, resampler):
     pred = resampler.predict(x, batch_size=10_000)[:, 0]
     w_new = pred / (1.0 - pred)
     return x, y, w_new
+
+
+def resample(*data):
+    x, y, w = data
+    keep_probability = w ** 2
+    assert np.all(keep_probability <= 1.0), "Probabilities must be <= 1.0"
+    keep = np.random.binomial(1, keep_probability) == 1
+
+    x = x[keep]
+    y = y[keep]
+    w = 1 / (0.00001 + w[keep])
+
+    return x, y, w
