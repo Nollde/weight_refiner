@@ -21,28 +21,30 @@ def safe_divide(a, b):
 
 def plot_n(data, refiner, reweighter, bins=100):
     # Create the Figure
-    fig, ax = plt.subplots(figsize=(8, 8))
+    fig, ax = plt.subplots(figsize=(8, 6))
 
     # Plot the data
-    _, bins, __ = plt.hist(
-        data[0], weights=data[-1], bins=bins, label="Data", color=colors["data"]
-    )
-    _, __, ___ = plt.hist(
-        refiner[0],
-        weights=refiner[-1],
+    _, bins, __ = ax.hist(
+        data[0],
+        weights=data[-1],
         bins=bins,
-        alpha=0.5,
-        label="Refiner",
-        color=colors["refiner"],
-        histtype="step",
+        label="Data",
+        color=colors["data"],
     )
-    _, __, ___ = plt.hist(
+    _, __, ___ = ax.hist(
         reweighter[0],
         weights=reweighter[-1],
         bins=bins,
-        alpha=0.5,
         label="Reweighter",
         color=colors["reweighter"],
+        histtype="step",
+    )
+    _, __, ___ = ax.hist(
+        refiner[0],
+        weights=refiner[-1],
+        bins=bins,
+        label="Refiner",
+        color=colors["refiner"],
         histtype="step",
     )
 
@@ -51,7 +53,7 @@ def plot_n(data, refiner, reweighter, bins=100):
 
     # Set labels
     plt.xlabel(r"$\xi$")
-    plt.ylabel(r"$\Sigma w$")
+    plt.ylabel(r"$\Sigma_i w_i$")
 
 
 def plot_n_ratio(data, refiner, reweighter, bins=100):
@@ -91,7 +93,7 @@ def plot_n_ratio(data, refiner, reweighter, bins=100):
     )
 
     # Set labels and legend
-    ax1.set_ylabel("Counts")
+    ax1.set_ylabel(r"$\Sigma_i w_i$")
     ax1.legend(frameon=False)
 
     # Plot the ratio and error
@@ -149,9 +151,97 @@ def plot_n_ratio(data, refiner, reweighter, bins=100):
     ax2.set_ylabel("Ratio")
 
 
-def plot_w():
-    pass
+def plot_w(data, refiner, reweighter, bins=100):
+    # Create the Figure
+    fig, ax = plt.subplots(figsize=(8, 6))
+
+    # Plot the weights
+    _, bins, __ = ax.hist(
+        data[-1],
+        bins=bins,
+        label="Data",
+        color=colors["data"],
+    )
+    _, __, ___ = ax.hist(
+        reweighter[-1],
+        bins=bins,
+        label="Reweighter",
+        color=colors["reweighter"],
+        histtype="step",
+    )
+    _, __, ___ = ax.hist(
+        refiner[-1],
+        bins=bins,
+        label="Refiner",
+        color=colors["refiner"],
+        histtype="step",
+    )
+
+    # Add legend
+    plt.legend(frameon=False)
+
+    # Set labels
+    plt.xlabel(r"$w_i$")
+    plt.ylabel(r"Counts")
 
 
-def plot_w2():
-    pass
+def plot_w2(data, refiner, reweighter, bins=100):
+    # Create the Figure
+    fig, ax = plt.subplots(figsize=(8, 6))
+
+    # Calculate w2 histograms
+    hist_data_w2, bins = np.histogram(
+        data[0],
+        weights=data[-1] ** 2,
+        bins=bins,
+    )
+    hist_reweighter_w2, _ = np.histogram(
+        reweighter[0],
+        weights=reweighter[-1] ** 2,
+        bins=bins,
+    )
+    hist_refiner_w2, _ = np.histogram(
+        refiner[0],
+        weights=refiner[-1] ** 2,
+        bins=bins,
+    )
+
+    # Turn w2 histograms into errors
+    data_err = hist_data_w2**0.5
+    reweighter_err = hist_reweighter_w2**0.5
+    refiner_err = hist_refiner_w2**0.5
+
+    bin_centers = 0.5 * (bins[:-1] + bins[1:])
+
+    # Plot the errors
+    ax.fill_between(
+        bin_centers,
+        data_err,
+        label="Data",
+        color=colors["data"],
+        step="mid",
+    )
+
+    ax.plot(
+        bin_centers,
+        reweighter_err,
+        label="Reweighter",
+        color=colors["reweighter"],
+        linestyle="None",
+        marker="o",
+    )
+    ax.plot(
+        bin_centers,
+        refiner_err,
+        label="Refiner",
+        color=colors["refiner"],
+        linestyle="None",
+        marker="x",
+    )
+
+    # Add legend
+    plt.legend(frameon=False)
+
+    # Set labels
+    plt.xlabel(r"$\xi$")
+    plt.ylabel(r"$\sqrt{\Sigma_i w_i^2}$")
