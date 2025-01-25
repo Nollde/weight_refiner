@@ -15,11 +15,17 @@ colors = {
 }
 
 
+legend_kwargs = {
+    "loc": "upper left",
+    "frameon": False,
+}
+
+
 def safe_divide(a, b):
-    return np.divide(a, b, out=np.zeros_like(a), where=b != 0)
+    return np.divide(a, b, out=np.zeros_like(b), where=b != 0)
 
 
-def plot_n(data, refiner, reweighter, bins=100):
+def plot_n(data=None, reweighter=None, refiner=None, bins=100):
     # Create the Figure
     fig, ax = plt.subplots(figsize=(8, 6))
 
@@ -49,14 +55,14 @@ def plot_n(data, refiner, reweighter, bins=100):
     )
 
     # Add legend
-    plt.legend(frameon=False)
+    plt.legend(**legend_kwargs)
 
     # Set labels
     plt.xlabel(r"$\xi$")
     plt.ylabel(r"$\Sigma_i w_i$")
 
 
-def plot_n_ratio(data, refiner, reweighter, bins=100):
+def plot_n_ratio(data=None, reweighter=None, refiner=None, bins=100):
     # Create the Figure
     fig, (ax1, ax2) = plt.subplots(
         2,
@@ -94,7 +100,7 @@ def plot_n_ratio(data, refiner, reweighter, bins=100):
 
     # Set labels and legend
     ax1.set_ylabel(r"$\Sigma_i w_i$")
-    ax1.legend(frameon=False)
+    ax1.legend(**legend_kwargs)
 
     # Plot the ratio and error
     # Calculate ratio
@@ -151,7 +157,7 @@ def plot_n_ratio(data, refiner, reweighter, bins=100):
     ax2.set_ylabel("Ratio")
 
 
-def plot_w(data, refiner, reweighter, bins=100):
+def plot_w(data=None, reweighter=None, refiner=None, bins=100):
     # Create the Figure
     fig, ax = plt.subplots(figsize=(8, 6))
 
@@ -178,14 +184,14 @@ def plot_w(data, refiner, reweighter, bins=100):
     )
 
     # Add legend
-    plt.legend(frameon=False)
+    plt.legend(**legend_kwargs)
 
     # Set labels
     plt.xlabel(r"$w_i$")
     plt.ylabel(r"Counts")
 
 
-def plot_w2(data, refiner, reweighter, bins=100):
+def plot_w2(data=None, reweighter=None, refiner=None, bins=100):
     # Create the Figure
     fig, ax = plt.subplots(figsize=(8, 6))
 
@@ -240,8 +246,21 @@ def plot_w2(data, refiner, reweighter, bins=100):
     )
 
     # Add legend
-    plt.legend(frameon=False)
+    plt.legend(**legend_kwargs)
 
     # Set labels
     plt.xlabel(r"$\xi$")
     plt.ylabel(r"$\sqrt{\Sigma_i w_i^2}$")
+
+
+def plot_training(history, title=""):
+    fig, ax = plt.subplots(figsize=(8, 6))
+
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+
+    plt.title(title)
+    plt.ylabel('Loss')
+    plt.xlabel('Epoch')
+
+    plt.legend(['train', 'val'], **legend_kwargs)
