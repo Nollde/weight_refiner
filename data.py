@@ -3,7 +3,8 @@ import numpy as np
 def create_data_gaussian(
     n_total,
     neg_frac=0.1,
-    neg_weight=1,
+    neg_weight=-1,
+    weight_scale=0.0,
     pos_loc=0,
     pos_scale=1,
     neg_loc=0,
@@ -20,12 +21,13 @@ def create_data_gaussian(
 
     pos = np.random.normal(loc=pos_loc, scale=pos_scale, size=n_pos)
     neg = np.random.normal(loc=neg_loc, scale=neg_scale, size=n_neg)
-
-    pos_weights = np.ones(n_pos)
-    neg_weights = -np.ones(n_neg) * neg_weight
     
-    # pos_weights = np.random.normal(loc=2, scale=0.3, size=n_pos)
-    # neg_weights = np.random.normal(loc=-1, scale=0.2, size=n_neg)
+    pos_weights = np.random.normal(loc=1, scale=weight_scale, size=n_pos)
+    neg_weights = np.random.normal(loc=neg_weight, scale=weight_scale, size=n_neg)
+
+    return pos, neg, pos_weights, neg_weights
+
+
 
     return pos, neg, pos_weights, neg_weights
 
