@@ -28,6 +28,22 @@ def create_data_gaussian(
     return pos, neg, pos_weights, neg_weights
 
 
+def load_data_tt():
+    input_dir = "/Users/dnoll/projects/NeuralPositiveResampler"  # Local path
+    x = np.load(f"{input_dir}/x.npy")
+    w = np.load(f"{input_dir}/w.npy")
+    
+    # get only first jet
+    x = x[:, 0, :]
+
+    pos_mask = w >= 0
+    neg_mask = w < 0
+
+    pos = x[pos_mask]
+    neg = x[neg_mask]
+    
+    pos_weights = w[pos_mask]
+    neg_weights = w[neg_mask]
 
     return pos, neg, pos_weights, neg_weights
 

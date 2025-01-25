@@ -16,7 +16,7 @@ colors = {
 
 
 legend_kwargs = {
-    "loc": "upper left",
+    "bbox_to_anchor": (0, 0.5, 1.0, 0.5),
     "frameon": False,
 }
 
@@ -25,20 +25,20 @@ def safe_divide(a, b):
     return np.divide(a, b, out=np.zeros_like(b), where=b != 0)
 
 
-def plot_n(data=None, reweighter=None, refiner=None, bins=100):
+def plot_n(data=None, reweighter=None, refiner=None, bins=100, transform=lambda x: x):
     # Create the Figure
     fig, ax = plt.subplots(figsize=(8, 6))
 
     # Plot the data
     _, bins, __ = ax.hist(
-        data[0],
+        transform(data[0]),
         weights=data[-1],
         bins=bins,
         label="Data",
         color=colors["data"],
     )
     _, __, ___ = ax.hist(
-        reweighter[0],
+        transform(reweighter[0]),
         weights=reweighter[-1],
         bins=bins,
         label="Reweighter",
@@ -46,7 +46,7 @@ def plot_n(data=None, reweighter=None, refiner=None, bins=100):
         histtype="step",
     )
     _, __, ___ = ax.hist(
-        refiner[0],
+        transform(refiner[0]),
         weights=refiner[-1],
         bins=bins,
         label="Refiner",
@@ -62,7 +62,7 @@ def plot_n(data=None, reweighter=None, refiner=None, bins=100):
     plt.ylabel(r"$\Sigma_i w_i$")
 
 
-def plot_n_ratio(data=None, reweighter=None, refiner=None, bins=100):
+def plot_n_ratio(data=None, reweighter=None, refiner=None, bins=100, transform=lambda x: x):
     # Create the Figure
     fig, (ax1, ax2) = plt.subplots(
         2,
@@ -75,14 +75,14 @@ def plot_n_ratio(data=None, reweighter=None, refiner=None, bins=100):
 
     # Plot the data
     hist_data, bins, __ = ax1.hist(
-        data[0],
+        transform(data[0]),
         weights=data[-1],
         bins=bins,
         label="Data",
         color=colors["data"],
     )
     hist_reweighter, _, __ = ax1.hist(
-        reweighter[0],
+        transform(reweighter[0]),
         weights=reweighter[-1],
         bins=bins,
         label="Reweighter",
@@ -90,7 +90,7 @@ def plot_n_ratio(data=None, reweighter=None, refiner=None, bins=100):
         histtype="step",
     )
     hist_refiner, _, __ = ax1.hist(
-        refiner[0],
+        transform(refiner[0]),
         weights=refiner[-1],
         bins=bins,
         label="Refiner",
@@ -109,17 +109,17 @@ def plot_n_ratio(data=None, reweighter=None, refiner=None, bins=100):
 
     # Calculate w2 histograms
     hist_data_w2, bins = np.histogram(
-        data[0],
+        transform(data[0]),
         weights=data[-1] ** 2,
         bins=bins,
     )
     hist_reweighter_w2, _ = np.histogram(
-        reweighter[0],
+        transform(reweighter[0]),
         weights=reweighter[-1] ** 2,
         bins=bins,
     )
     hist_refiner_w2, _ = np.histogram(
-        refiner[0],
+        transform(refiner[0]),
         weights=refiner[-1] ** 2,
         bins=bins,
     )
@@ -191,23 +191,23 @@ def plot_w(data=None, reweighter=None, refiner=None, bins=100):
     plt.ylabel(r"Counts")
 
 
-def plot_w2(data=None, reweighter=None, refiner=None, bins=100):
+def plot_w2(data=None, reweighter=None, refiner=None, bins=100, transform=lambda x: x):
     # Create the Figure
     fig, ax = plt.subplots(figsize=(8, 6))
 
     # Calculate w2 histograms
     hist_data_w2, bins = np.histogram(
-        data[0],
+        transform(data[0]),
         weights=data[-1] ** 2,
         bins=bins,
     )
     hist_reweighter_w2, _ = np.histogram(
-        reweighter[0],
+        transform(reweighter[0]),
         weights=reweighter[-1] ** 2,
         bins=bins,
     )
     hist_refiner_w2, _ = np.histogram(
-        refiner[0],
+        transform(refiner[0]),
         weights=refiner[-1] ** 2,
         bins=bins,
     )
@@ -256,11 +256,11 @@ def plot_w2(data=None, reweighter=None, refiner=None, bins=100):
 def plot_training(history, title=""):
     fig, ax = plt.subplots(figsize=(8, 6))
 
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
+    plt.plot(history.history['loss'], label='train')
+    plt.plot(history.history['val_loss'], label='val')
 
     plt.title(title)
     plt.ylabel('Loss')
     plt.xlabel('Epoch')
 
-    plt.legend(['train', 'val'], **legend_kwargs)
+    plt.legend(frameon=False)
