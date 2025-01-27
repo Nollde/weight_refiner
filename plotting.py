@@ -25,6 +25,42 @@ def safe_divide(a, b):
     return np.divide(a, b, out=np.zeros_like(b), where=b != 0)
 
 
+def plot_raw(data=None, bins=100):
+    pos, neg, pos_weights, neg_weights = data
+    # Create the Figure
+    fig, ax = plt.subplots(figsize=(8, 6))
+    # Plot the data
+    _, _, ___ = ax.hist(
+        np.concatenate([pos, neg]),
+        weights=np.concatenate([pos_weights, neg_weights]),
+        bins=bins,
+        label="Effective",
+        color=colors["data"],
+    )
+    _, _, ___ = ax.hist(
+        pos,
+        weights=pos_weights,
+        bins=bins,
+        label="Positive",
+        color=colors["refiner"],
+        histtype="step",
+    )
+    _, __, ___ = ax.hist(
+        neg,
+        weights=neg_weights,
+        bins=bins,
+        label="Negative",
+        color=colors["reweighter"],
+        histtype="step",
+    )
+
+    # Add legend
+    plt.legend(**legend_kwargs)
+    # Set labels
+    plt.xlabel(r"$\xi$")
+    plt.ylabel(r"$\Sigma_i w_i$")
+
+
 def plot_n(data=None, reweighter=None, refiner=None, bins=100, transform=lambda x: x):
     # Create the Figure
     fig, ax = plt.subplots(figsize=(8, 6))
@@ -62,7 +98,9 @@ def plot_n(data=None, reweighter=None, refiner=None, bins=100, transform=lambda 
     plt.ylabel(r"$\Sigma_i w_i$")
 
 
-def plot_n_ratio(data=None, reweighter=None, refiner=None, bins=100, transform=lambda x: x):
+def plot_n_ratio(
+    data=None, reweighter=None, refiner=None, bins=100, transform=lambda x: x
+):
     # Create the Figure
     fig, (ax1, ax2) = plt.subplots(
         2,
@@ -256,11 +294,11 @@ def plot_w2(data=None, reweighter=None, refiner=None, bins=100, transform=lambda
 def plot_training(history, title=""):
     fig, ax = plt.subplots(figsize=(8, 6))
 
-    plt.plot(history.history['loss'], label='train')
-    plt.plot(history.history['val_loss'], label='val')
+    plt.plot(history.history["loss"], label="train")
+    plt.plot(history.history["val_loss"], label="val")
 
     plt.title(title)
-    plt.ylabel('Loss')
-    plt.xlabel('Epoch')
+    plt.ylabel("Loss")
+    plt.xlabel("Epoch")
 
     plt.legend(frameon=False)
