@@ -187,6 +187,19 @@ def plot_n_ratio(
         color=colors["refiner"],
     )
 
+    y_range = (0.8, 1.2)
+
+    # Plot arrows for out-of-range values
+    for ratio, color in zip([ratio_reweighter, ratio_refiner], [colors["reweighter"], colors["refiner"]]):
+        for i, y in enumerate(ratio):
+            if y > y_range[1]:
+                ax2.plot(bin_centers[i], y_range[1], marker=(3, 0, 0), color=color, markersize=10)
+            elif y < y_range[0]:
+                ax2.plot(bin_centers[i], y_range[0], marker=(3, 0, 180), color=color, markersize=10)
+
+    # Set the y-axis limit
+    ax2.set_ylim(y_range)
+
     # Plot the 1:1 line
     ax2.axhline(y=1, linewidth=2, color="gray")
 
