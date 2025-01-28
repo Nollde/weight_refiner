@@ -193,9 +193,9 @@ def plot_n_ratio(
     for ratio, color in zip([ratio_reweighter, ratio_refiner], [colors["reweighter"], colors["refiner"]]):
         for i, y in enumerate(ratio):
             if y > y_range[1]:
-                ax2.plot(bin_centers[i], y_range[1], marker=(3, 0, 0), color=color, markersize=10)
+                ax2.plot(bin_centers[i], y_range[1]-0.02, marker=(3, 0, 0), color=color, markersize=10)
             elif y < y_range[0]:
-                ax2.plot(bin_centers[i], y_range[0], marker=(3, 0, 180), color=color, markersize=10)
+                ax2.plot(bin_centers[i], y_range[0]+0.02, marker=(3, 0, 180), color=color, markersize=10)
 
     # Set the y-axis limit
     ax2.set_ylim(y_range)
