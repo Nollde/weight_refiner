@@ -25,20 +25,20 @@ def safe_divide(a, b):
     return np.divide(a, b, out=np.zeros_like(b), where=b != 0)
 
 
-def plot_raw(data=None, bins=100):
+def plot_raw(data=None, bins=100, transform=lambda x: x[:, 0]):
     pos, neg, pos_weights, neg_weights = data
     # Create the Figure
     fig, ax = plt.subplots(figsize=(8, 6))
     # Plot the data
     _, _, ___ = ax.hist(
-        np.concatenate([pos, neg]),
+        transform(np.concatenate([pos, neg])),
         weights=np.concatenate([pos_weights, neg_weights]),
         bins=bins,
         label="Effective",
         color=colors["data"],
     )
     _, _, ___ = ax.hist(
-        pos,
+        transform(pos),
         weights=pos_weights,
         bins=bins,
         label="Positive",
@@ -46,7 +46,7 @@ def plot_raw(data=None, bins=100):
         histtype="step",
     )
     _, __, ___ = ax.hist(
-        neg,
+        transform(neg),
         weights=neg_weights,
         bins=bins,
         label="Negative",
@@ -61,7 +61,7 @@ def plot_raw(data=None, bins=100):
     plt.ylabel(r"$\Sigma_i w_i$")
 
 
-def plot_n(data=None, reweighter=None, refiner=None, bins=100, transform=lambda x: x):
+def plot_n(data=None, reweighter=None, refiner=None, bins=100, transform=lambda x: x[:, 0]):
     # Create the Figure
     fig, ax = plt.subplots(figsize=(8, 6))
 
@@ -98,9 +98,7 @@ def plot_n(data=None, reweighter=None, refiner=None, bins=100, transform=lambda 
     plt.ylabel(r"$\Sigma_i w_i$")
 
 
-def plot_n_ratio(
-    data=None, reweighter=None, refiner=None, bins=100, transform=lambda x: x
-):
+def plot_n_ratio(data=None, reweighter=None, refiner=None, bins=100, transform=lambda x: x[:, 0]):
     # Create the Figure
     fig, (ax1, ax2) = plt.subplots(
         2,
@@ -242,7 +240,7 @@ def plot_w(data=None, reweighter=None, refiner=None, bins=100):
     plt.ylabel(r"Counts")
 
 
-def plot_w2(data=None, reweighter=None, refiner=None, bins=100, transform=lambda x: x):
+def plot_w2(data=None, reweighter=None, refiner=None, bins=100, transform=lambda x: x[:, 0]):
     # Create the Figure
     fig, ax = plt.subplots(figsize=(8, 6))
 

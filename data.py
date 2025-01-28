@@ -9,6 +9,7 @@ def create_data_gaussian(
     pos_scale=1,
     neg_loc=0,
     neg_scale=0.5,
+    shape=(1,),
 ):
     """
     n_total: total number of samples
@@ -19,8 +20,8 @@ def create_data_gaussian(
     n_neg = int(n_total * neg_frac)
     n_pos = n_total - n_neg
 
-    pos = np.random.normal(loc=pos_loc, scale=pos_scale, size=n_pos)
-    neg = np.random.normal(loc=neg_loc, scale=neg_scale, size=n_neg)
+    pos = np.random.normal(loc=pos_loc, scale=pos_scale, size=(n_pos,) + shape)
+    neg = np.random.normal(loc=neg_loc, scale=neg_scale, size=(n_neg,) + shape)
     
     pos_weights = np.random.normal(loc=1, scale=weight_scale, size=n_pos)
     neg_weights = np.random.normal(loc=neg_weight, scale=weight_scale, size=n_neg)
