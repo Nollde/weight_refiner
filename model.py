@@ -85,6 +85,10 @@ def apply_refiner(*data, refiner=None):
 
 
 def resample(*data):
+    """
+    Makes simplifying assumption that all weights are +-1
+    to calculate variance (see https://arxiv.org/abs/2007.11586)
+    """
     x, y, w = data
     keep_probability = w**2
     if not np.all(keep_probability <= 1.0):
