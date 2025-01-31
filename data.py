@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def create_data_gaussian(
     n_total,
     neg_frac=0.1,
@@ -22,9 +23,24 @@ def create_data_gaussian(
 
     pos = np.random.normal(loc=pos_loc, scale=pos_scale, size=(n_pos,) + shape)
     neg = np.random.normal(loc=neg_loc, scale=neg_scale, size=(n_neg,) + shape)
-    
+
     pos_weights = np.random.normal(loc=1, scale=weight_scale, size=n_pos)
     neg_weights = np.random.normal(loc=neg_weight, scale=weight_scale, size=n_neg)
+
+    return pos, neg, pos_weights, neg_weights
+
+
+def create_data_function(n_total, shape=(1,), function=lambda x: x):
+    """
+    n_total: total number of samples
+    neg_frac: fraction of (unweighted) negative samples
+    neg_weight: weight of negative samples
+    """
+
+    pos = np.random.uniform(0, 3, size=(n_total,) + shape)
+    pos_weights = function(pos[:, 0])
+    neg = np.empty((0,) + shape)
+    neg_weights = np.array([])
 
     return pos, neg, pos_weights, neg_weights
 
@@ -33,7 +49,7 @@ def load_data_tt():
     input_dir = "/Users/dnoll/projects/NeuralPositiveResampler"  # Local path
     x = np.load(f"{input_dir}/x.npy")
     w = np.load(f"{input_dir}/w.npy")
-    
+
     # get only first jet
     x = x[:, 0, :]
 
@@ -42,7 +58,7 @@ def load_data_tt():
 
     pos = x[pos_mask]
     neg = x[neg_mask]
-    
+
     pos_weights = w[pos_mask]
     neg_weights = w[neg_mask]
 
