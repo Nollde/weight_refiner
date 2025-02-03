@@ -112,7 +112,7 @@ def get_fig_with_legend_ratio(figsize=(8, 8), height_ratios=[0.5, 3, 1]):
 
 def plot_raw(data=None, bins=100, transform=lambda x: x[:, 0], path=None):
     pos, neg, pos_weights, neg_weights = data
-    # Create the Figure    
+    # Create the Figure
     fig, (legend_axis, plot_axis) = get_fig_with_legend()
 
     # Plot the data
@@ -152,7 +152,15 @@ def plot_raw(data=None, bins=100, transform=lambda x: x[:, 0], path=None):
     if path is not None:
         savefig(path)
 
-def plot_n_ratio(data=None, reweighter=None, refiner=None, bins=100, transform=lambda x: x[:, 0], path=None):
+
+def plot_n_ratio(
+    data=None,
+    reweighter=None,
+    refiner=None,
+    bins=100,
+    transform=lambda x: x[:, 0],
+    path=None,
+):
     # Create the Figure
     fig, (legend_axis, plot_axis, ratio_axis) = get_fig_with_legend_ratio()
 
@@ -238,12 +246,26 @@ def plot_n_ratio(data=None, reweighter=None, refiner=None, bins=100, transform=l
     y_range = (0.8, 1.2)
 
     # Plot arrows for out-of-range values
-    for ratio, color in zip([ratio_reweighter, ratio_refiner], [colors["reweighter"], colors["refiner"]]):
+    for ratio, color in zip(
+        [ratio_reweighter, ratio_refiner], [colors["reweighter"], colors["refiner"]]
+    ):
         for i, y in enumerate(ratio):
             if y > y_range[1]:
-                ratio_axis.plot(bin_centers[i], y_range[1]-0.02, marker=(3, 0, 0), color=color, markersize=10)
+                ratio_axis.plot(
+                    bin_centers[i],
+                    y_range[1] - 0.02,
+                    marker=(3, 0, 0),
+                    color=color,
+                    markersize=10,
+                )
             elif y < y_range[0]:
-                ratio_axis.plot(bin_centers[i], y_range[0]+0.02, marker=(3, 0, 180), color=color, markersize=10)
+                ratio_axis.plot(
+                    bin_centers[i],
+                    y_range[0] + 0.02,
+                    marker=(3, 0, 180),
+                    color=color,
+                    markersize=10,
+                )
 
     # Set the y-axis limit
     ratio_axis.set_ylim(y_range)
@@ -261,7 +283,7 @@ def plot_n_ratio(data=None, reweighter=None, refiner=None, bins=100, transform=l
 
 
 def plot_w(data=None, reweighter=None, refiner=None, bins=100, path=None):
-    # Create the Figure    
+    # Create the Figure
     fig, (legend_axis, plot_axis) = get_fig_with_legend()
 
     # Plot the weights
@@ -299,8 +321,15 @@ def plot_w(data=None, reweighter=None, refiner=None, bins=100, path=None):
         savefig(path)
 
 
-def plot_w2(data=None, reweighter=None, refiner=None, bins=100, transform=lambda x: x[:, 0], path=None):
-    # Create the Figure    
+def plot_w2(
+    data=None,
+    reweighter=None,
+    refiner=None,
+    bins=100,
+    transform=lambda x: x[:, 0],
+    path=None,
+):
+    # Create the Figure
     fig, (legend_axis, plot_axis) = get_fig_with_legend()
 
     # Calculate w2 histograms
@@ -367,7 +396,7 @@ def plot_w2(data=None, reweighter=None, refiner=None, bins=100, transform=lambda
 
 
 def plot_training(history, title="", path=None):
-    # Create the Figure    
+    # Create the Figure
     fig, (legend_axis, plot_axis) = get_fig_with_legend()
 
     plot_axis.plot(history.history["loss"], label="train")
