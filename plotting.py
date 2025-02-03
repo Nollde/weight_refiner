@@ -223,8 +223,8 @@ def plot_n_ratio(
     refiner_err = (hist_data_w2 + hist_refiner_w2) ** 0.5
 
     # Take relative errors
-    ratio_reweighter_err = safe_divide(reweighter_err, hist_data)
-    ratio_refiner_err = safe_divide(refiner_err, hist_data)
+    ratio_reweighter_err = safe_divide(reweighter_err, np.abs(hist_data))
+    ratio_refiner_err = safe_divide(refiner_err, np.abs(hist_data))
 
     # Plot the ratio
     bin_centers = 0.5 * (bins[:-1] + bins[1:])
