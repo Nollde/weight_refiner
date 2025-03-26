@@ -30,17 +30,21 @@ def create_data_gaussian(
     return pos, neg, pos_weights, neg_weights
 
 
-def create_data_function(n_total, shape=(1,), function=lambda x: x):
+def create_data_function(n_pos, n_neg=0, shape=(1,), function_pos=lambda x: x, function_neg=lambda x: x):
     """
-    n_total: total number of samples
-    neg_frac: fraction of (unweighted) negative samples
-    neg_weight: weight of negative samples
+    Create data based on a function for positive and negative samples.
+    n_pos: number of positive samples
+    n_neg: number of negative samples (default is 0)
+    shape: shape of each sample (default is (1,))
+    function_pos: function to generate positive weights (default is identity)
+    function_neg: function to generate negative weights (default is identity)
+    Note: The first dimension of the shape is the sample size, and the rest are the features.
     """
 
-    pos = np.random.uniform(0, 3, size=(n_total,) + shape)
-    pos_weights = function(pos[:, 0])
-    neg = np.empty((0,) + shape)
-    neg_weights = np.array([])
+    pos = np.random.uniform(0, 3, size=(n_pos,) + shape)
+    pos_weights = function_pos(pos[:, 0])
+    neg = np.random.uniform(0, 3, size=(n_neg,) + shape)
+    neg_weights = function_neg(neg[:, 0])
 
     return pos, neg, pos_weights, neg_weights
 
