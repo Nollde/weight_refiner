@@ -2,8 +2,8 @@ import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 
-from data import prepare_data_natural
-from plotting import safe_divide
+from refiner.data import prepare_data_natural
+from refiner.plotting import safe_divide
 
 
 def prepare_data_reweighter(pos, neg, pos_weights, neg_weights):
