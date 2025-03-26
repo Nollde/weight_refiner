@@ -47,16 +47,22 @@ def get_val(*data, **kwargs):
     return x_val, y_val, w_val
 
 
-def simple_model(input_shape=(1,)):
-    return tf.keras.Sequential(
-        layers=[
-            tf.keras.Input(shape=input_shape),
-            tf.keras.layers.Dense(128, activation="relu"),
-            tf.keras.layers.Dense(128, activation="relu"),
-            tf.keras.layers.Dense(128, activation="relu"),
-            tf.keras.layers.Dense(1, activation="sigmoid"),
-        ]
-    )
+def simple_model(input_shape=(1,), n_layers=3, n_nodes=128):
+    """
+    Create a simple feedforward neural network model.
+    input_shape: shape of the input data (default is (1,))
+    n_layers: number of hidden layers (default is 3)
+    n_nodes: number of nodes in each hidden layer (default is 128)
+    """
+    if n_layers < 1:
+        raise ValueError("n_layers must be at least 1")
+    if n_nodes < 1:
+        raise ValueError("n_nodes must be at least 1")
+    layers = [tf.keras.Input(shape=input_shape)]
+    for _ in range(n_layers):
+        layers.append(tf.keras.layers.Dense(n_nodes, activation="relu"))
+    layers.append(tf.keras.layers.Dense(1, activation="sigmoid"))
+    return tf.keras.Sequential(layers=layers)
 
 
 def apply_reweighter(*data, reweighter=None):
@@ -72,16 +78,6 @@ def apply_refiner(*data, refiner=None):
     ratio = 1 / pred - 1
     w_new = w * (1 - ratio) / (1 + ratio)
     return x, y, w_new
-
-
-# def check_refiner(vals, refiner):
-#     # Analytic check of refiner ratio
-#     # vals = (bins[1:] + bins[:-1]) / 2
-#     ratio = 1 / refiner.predict(vals) - 1
-
-#     plt.plot(vals, ratio, label="DNN Ratio")
-#     plt.plot(vals, np.abs(neg)/pos, label="Analytic Ratio")
-#     plt.legend()
 
 
 def resample(*data):
