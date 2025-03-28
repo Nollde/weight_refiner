@@ -4,6 +4,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib as mpl
 import matplotlib.gridspec as gridspec
+from matplotlib.patches import Patch
+from matplotlib.lines import Line2D
 
 
 mpl.rcParams["lines.linewidth"] = 2
@@ -12,8 +14,12 @@ mpl.rcParams["font.family"] = "serif"
 mpl.rcParams["font.size"] = "18"
 
 
+def to_color(*rgb):
+    return tuple([c / 256 for c in rgb])
+
+
 colors = {
-    "data": (205 / 256, 223 / 256, 237 / 256),
+    "data": to_color(205, 223, 237),
     "refiner": "green",
     "reweighter": "orange",
 }
@@ -29,6 +35,10 @@ legend_kwargs = {
 
 def safe_divide(a, b):
     return np.divide(a, b, out=np.zeros_like(b), where=b != 0)
+
+
+def safe_log10(arr):
+    return np.log10(arr, out=np.zeros_like(arr, dtype=arr.dtype), where=arr > 0)
 
 
 def savefig(path):
