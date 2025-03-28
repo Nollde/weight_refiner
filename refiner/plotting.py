@@ -291,6 +291,160 @@ def plot_n_ratio(
         savefig(path)
 
 
+def plot_n_ratio_multi(
+    data=None,
+    reweighter=None,
+    refiner=None,
+    bins=100,
+    transform=lambda x: x[:, 0],
+    ratio_unc="hilo",
+    ratio_y_range=(0.9, 1.1),
+    path=None,
+):
+    # Create the Figure
+    fig, (legend_axis, plot_axis, ratio_axis) = get_fig_with_legend_ratio(
+        height_ratios=[0.5, 2, 2]
+    )
+
+    def get_histograms(datas, *args, **kwargs):
+        hists = []
+        for data in datas:
+            hist, bins = np.histogram(
+                transform(data[0]),
+                weights=data[-1],
+                *args,
+                **kwargs,
+            )
+            hists.append(hist)
+        return np.array(hists)
+
+    hist_data = get_histograms([data], bins=bins)
+    # Calculate w2 histograms
+    hist_data_w2, bins = np.histogram(
+        transform(data[0]),
+        weights=data[-1] ** 2,
+        bins=bins,
+    )
+    hist_reweighters = get_histograms(reweighter, bins=bins)
+    hist_refiners = get_histograms(refiner, bins=bins)
+
+    mean_data = np.mean(hist_data, axis=0)
+    mean_reweighters = np.mean(hist_reweighters, axis=0)
+    mean_refiners = np.mean(hist_refiners, axis=0)
+
+    # main plot
+    plot_axis.bar(
+        bins[:-1],
+        mean_data,
+        width=bins[1:] - bins[:-1],
+        label="Data",
+        color=colors["data"],
+        align="edge",
+    )
+
+    plot_axis.step(
+        bins,
+        np.concatenate(([0], mean_reweighters)),
+        label="Reweighter",
+        color=colors["reweighter"],
+        where="pre",
+    )
+    plot_axis.step(
+        bins,
+        np.concatenate(([0], mean_refiners)),
+        label="Refiner",
+        color=colors["refiner"],
+        where="pre",
+    )
+
+    # Set labels
+    plot_axis.set_ylabel(r"$\Sigma_i w_i$")
+
+    # Add legend
+    handles, labels = plot_axis.get_legend_handles_labels()
+    legend_axis.legend(handles=handles, labels=labels, **legend_kwargs)
+
+    # ratio plot
+    data_stat_err = hist_data_w2**0.5
+    data_stat_err_rel = safe_divide(data_stat_err, mean_data)
+
+    bin_centers = 0.5 * (bins[:-1] + bins[1:])
+    ratio_axis.errorbar(
+        bin_centers,
+        np.ones_like(bin_centers),
+        yerr=data_stat_err_rel,
+        color=colors["data"],
+        zorder=0,
+    )
+
+    def get_low_high(data, mode="std"):
+        if mode == "std":
+            low = np.mean(data, axis=0) - np.std(data, axis=0)
+            high = np.mean(data, axis=0) + np.std(data, axis=0)
+        elif mode == "hilo":
+            low = np.min(data, axis=0)
+            high = np.max(data, axis=0)
+        else:
+            raise ValueError("mode must be 'std' or 'hilo'")
+        return low, high
+
+    ratio_reweighter = safe_divide(mean_reweighters, mean_data)
+    low_reweighter, high_reweighter = get_low_high(hist_reweighters, mode=ratio_unc)
+    ratio_axis.fill_between(
+        bins,
+        np.concatenate(([1], safe_divide(low_reweighter, mean_data))),
+        np.concatenate(([1], safe_divide(high_reweighter, mean_data))),
+        step="pre",
+        lw=0,
+        color=colors["reweighter"],
+    )
+
+    ratio_refiner = safe_divide(mean_refiners, mean_data)
+    low_refiner, high_refiner = get_low_high(hist_refiners, mode=ratio_unc)
+    ratio_axis.fill_between(
+        bins,
+        np.concatenate(([1], safe_divide(low_refiner, mean_data))),
+        np.concatenate(([1], safe_divide(high_refiner, mean_data))),
+        step="pre",
+        lw=0,
+        color=colors["refiner"],
+        alpha=0.5,
+    )
+
+    # Plot arrows for out-of-range values
+    for ratio, color in zip(
+        [ratio_reweighter, ratio_refiner], [colors["reweighter"], colors["refiner"]]
+    ):
+        for i, y in enumerate(ratio):
+            if y > ratio_y_range[1]:
+                ratio_axis.plot(
+                    bin_centers[i],
+                    ratio_y_range[1] - 0.02,
+                    marker=(3, 0, 0),
+                    color=color,
+                    markersize=10,
+                )
+            elif y < ratio_y_range[0]:
+                ratio_axis.plot(
+                    bin_centers[i],
+                    ratio_y_range[0] + 0.02,
+                    marker=(3, 0, 180),
+                    color=color,
+                    markersize=10,
+                )
+
+    # Set the y-axis limit
+    ratio_axis.set_ylim(ratio_y_range)
+
+    # Set labels
+    ratio_axis.set_xlabel(r"$\xi$")
+    ratio_axis.set_ylabel("Ratio")
+
+    # Save the plot
+    if path is not None:
+        savefig(path)
+
+
 def plot_w(data=None, reweighter=None, refiner=None, bins=100, path=None):
     # Create the Figure
     fig, (legend_axis, plot_axis) = get_fig_with_legend()
