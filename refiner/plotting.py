@@ -159,6 +159,7 @@ def plot_n_ratio(
     refiner=None,
     bins=100,
     transform=lambda x: x[:, 0],
+    ratio_y_range=(0.8, 1.2),
     path=None,
 ):
     # Create the Figure
@@ -243,32 +244,30 @@ def plot_n_ratio(
         color=colors["refiner"],
     )
 
-    y_range = (0.8, 1.2)
-
     # Plot arrows for out-of-range values
     for ratio, color in zip(
         [ratio_reweighter, ratio_refiner], [colors["reweighter"], colors["refiner"]]
     ):
         for i, y in enumerate(ratio):
-            if y > y_range[1]:
+            if y > ratio_y_range[1]:
                 ratio_axis.plot(
                     bin_centers[i],
-                    y_range[1] - 0.02,
+                    ratio_y_range[1] - 0.02,
                     marker=(3, 0, 0),
                     color=color,
                     markersize=10,
                 )
-            elif y < y_range[0]:
+            elif y < ratio_y_range[0]:
                 ratio_axis.plot(
                     bin_centers[i],
-                    y_range[0] + 0.02,
+                    ratio_y_range[0] + 0.02,
                     marker=(3, 0, 180),
                     color=color,
                     markersize=10,
                 )
 
     # Set the y-axis limit
-    ratio_axis.set_ylim(y_range)
+    ratio_axis.set_ylim(ratio_y_range)
 
     # Plot the 1:1 line
     ratio_axis.axhline(y=1, linewidth=2, color="gray")
