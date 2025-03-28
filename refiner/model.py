@@ -1,3 +1,4 @@
+from collections import defaultdict
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
@@ -47,11 +48,11 @@ def get_val(*data, **kwargs):
     return x_val, y_val, w_val
 
 
-def simple_model(input_shape=(1,), n_layers=3, n_nodes=128):
+def simple_model(input_shape=(1,), n_layers=2, n_nodes=128):
     """
     Create a simple feedforward neural network model.
     input_shape: shape of the input data (default is (1,))
-    n_layers: number of hidden layers (default is 3)
+    n_layers: number of hidden layers (default is 2)
     n_nodes: number of nodes in each hidden layer (default is 128)
     """
     if n_layers < 1:
@@ -94,6 +95,117 @@ def resample(*data):
 
     x = x[keep]
     y = y[keep]
-    w = safe_divide(1., w[keep])
+    w = safe_divide(1.0, w[keep])
 
     return x, y, w
+
+
+class HistoryLogger(tf.keras.callbacks.Callback):
+    def __init__(self, n, val_data=None):
+        self.n = n
+        self.val_data = val_data
+        self.history = defaultdict(list)
+        self.counter = 0
+
+    def on_batch_end(self, batch, logs=None):
+        self.counter += 1
+        if self.counter % self.n == 0:
+            for key, value in logs.items():
+                self.history[key].append((self.counter, value))
+            if self.val_data is not None:
+                x_val, y_val, w_val = self.val_data
+                val_loss, val_accuracy = self.model.evaluate(
+                    x_val, y_val, sample_weight=w_val, verbose=0
+                )
+                self.history["val_loss"].append((self.counter, val_loss))
+                self.history["val_accuracy"].append((self.counter, val_accuracy))
+
+
+class InfoLogger(tf.keras.callbacks.Callback):
+    def on_epoch_begin(self, epoch, logs=None):
+        optimizer = self.model.optimizer
+        if isinstance(optimizer, tf.keras.optimizers.schedules.LearningRateSchedule):
+            lr = optimizer.learning_rate(optimizer.iterations)
+        else:
+            lr = optimizer.learning_rate
+        print(f'Epoch {epoch+1}, Learning Rate: {lr}')
+
+
+
+class SimpleModel:
+    def __init__(self, *args, **kwargs):
+        self.model = simple_model(*args, **kwargs)
+
+    def compile(
+        self,
+        *args,
+        loss=tf.keras.losses.BinaryCrossentropy(from_logits=False),
+        optimizer=tf.keras.optimizers.Adam,
+        metrics=["accuracy"],
+        learning_rate=None,
+        n_train=None,
+        epochs=None,
+        batch_size=None,
+        **kwargs,
+    ):
+        if isinstance(learning_rate, tuple):
+            initial_lr, final_lr = learning_rate
+            steps_per_epoch = n_train // batch_size
+            learning_rate = self.lr_schedule_exp(
+                initial_lr=initial_lr,
+                final_lr=final_lr,
+                total_epochs=epochs,
+                steps_per_epoch=steps_per_epoch,
+            )
+        if learning_rate is None:
+            optimizer = optimizer()
+        else:
+            optimizer = optimizer(learning_rate=learning_rate)
+        self.model.compile(
+            *args,
+            **kwargs,
+            optimizer=optimizer,
+            loss=loss,
+            metrics=metrics,
+        )
+        return self
+
+    def fit(self, *args, **kwargs):
+        self.logger = HistoryLogger(
+            n=1000,
+            val_data=kwargs.get("validation_data"),
+        )
+        self.model.fit(
+            *args,
+            **kwargs,
+            callbacks=[
+                # self.logger,
+                # InfoLogger(),
+            ],
+        )
+        return self.logger
+
+    def predict(self, *args, **kwargs):
+        return self.model.predict(*args, **kwargs)
+
+    def reduce_lr_plateau(self, factor=0.2, patience=50):
+        return tf.keras.callbacks.ReduceLROnPlateau(
+            factor=factor,
+            patience=patience,
+        )
+
+    def lr_schedule_exp(self, initial_lr, final_lr, total_epochs, steps_per_epoch):
+        total_decay = final_lr / initial_lr
+        decay_rate = total_decay ** (1 / total_epochs)
+
+        return tf.keras.optimizers.schedules.ExponentialDecay(
+            initial_learning_rate=initial_lr,
+            decay_steps=steps_per_epoch,
+            decay_rate=decay_rate,
+            staircase=True,
+        )
+
+    def early_stopping(self, patience=1000):
+        return tf.keras.callbacks.EarlyStopping(
+            patience=patience,
+        )

@@ -685,8 +685,8 @@ def plot_training(history, title="", path=None):
     # Create the Figure
     fig, (legend_axis, plot_axis) = get_fig_with_legend()
 
-    plot_axis.plot(history.history["loss"], label="train")
-    plot_axis.plot(history.history["val_loss"], label="val")
+    plot_axis.plot(*zip(*history["loss"]), label="train")
+    plot_axis.plot(*zip(*history["val_loss"]), label="val")
 
     fig.suptitle(title)
 
