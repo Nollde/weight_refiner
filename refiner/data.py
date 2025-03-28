@@ -49,13 +49,13 @@ def create_data_function(n_pos, n_neg=0, shape=(1,), function_pos=lambda x: x, f
     return pos, neg, pos_weights, neg_weights
 
 
-def load_data_tt():
+def load_data_tt(n_jets=1):
     input_dir = "/Users/dnoll/projects/NeuralPositiveResampler"  # Local path
     x = np.load(f"{input_dir}/x.npy")
     w = np.load(f"{input_dir}/w.npy")
 
     # get only first jet
-    x = x[:, 0, :]
+    x = x[:, :n_jets].reshape(x.shape[0], -1)
 
     pos_mask = w >= 0
     neg_mask = w < 0
