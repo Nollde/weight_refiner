@@ -484,6 +484,129 @@ def plot_w(data=None, reweighter=None, refiner=None, bins=100, path=None):
         savefig(path)
 
 
+def plot_w_2d_hist(
+    reweighter=None,
+    refiner=None,
+    bins=100,
+    transform=lambda x: x[:, 0],
+    path=None,
+):
+    weight_bins = np.arange(0.0, 1.4, 0.1)
+    fig, (legend_axis, plot_axis) = get_fig_with_legend()
+
+    # Create the 2D histogram
+    hist, xedges, yedges = np.histogram2d(
+        refiner[0][:, 0],
+        refiner[-1],
+        bins=(bins, weight_bins),
+    )
+
+    levels = np.logspace(safe_log10(np.min(hist)), safe_log10(np.max(hist)), 15)
+    norm = mpl.colors.LogNorm(vmin=levels[0], vmax=levels[-1])
+
+    plot_axis.hist2d(
+        transform(reweighter[0]),
+        reweighter[-1],
+        norm=norm,
+        bins=(bins, weight_bins),
+    )
+
+    # Create the contour plot)
+    xcenter = (xedges[:-1] + xedges[1:]) / 2
+    ycenter = (yedges[:-1] + yedges[1:]) / 2
+    X, Y = np.meshgrid(xcenter, ycenter)
+
+    plot_axis.contour(
+        X,
+        Y,
+        hist.T,
+        levels=levels,
+        norm=norm,
+    )
+
+    # Set labels
+    plot_axis.set_xlabel(r"$\xi$")
+    plot_axis.set_ylabel(r"$w_i$")
+
+    # Create proxy artists for the hist2d
+    proxy1 = Patch(facecolor=to_color(170, 220, 50))
+    proxy2 = Line2D([0], [0], color=to_color(75, 56, 117), lw=2)
+
+    # Add the proxy artists to the legend
+    legend_axis.legend(
+        [proxy1, proxy2],
+        ["Reweighter", "Refiner"],
+        **legend_kwargs,
+    )
+    # Save the plot
+    if path is not None:
+        savefig(path)
+
+
+def plot_w_2d_scatter(
+    data=None,
+    reweighter=None,
+    refiner=None,
+    transform=lambda x: x[:, 0],
+    path=None,
+    n_max=None,
+):
+    # Limit the number of points to plot
+    n_max = int(n_max) if n_max is not None else None
+    if n_max is not None:
+        if data is not None:
+            data = [d[:n_max] for d in data]
+        if reweighter is not None:
+            reweighter = [r[:n_max] for r in reweighter]
+        if refiner is not None:
+            refiner = [r[:n_max] for r in refiner]
+
+    fig, (legend_axis, plot_axis) = get_fig_with_legend(height_ratios=[0.3, 3])
+
+    if data:
+        # Plot the data
+        plot_axis.scatter(
+            transform(data[0]),
+            data[-1],
+            label="Data",
+            color=colors["data"],
+            s=0.5,
+            zorder=0,
+        )
+    plot_axis.scatter(
+        transform(reweighter[0]),
+        reweighter[-1],
+        label="Reweighter",
+        color=colors["reweighter"],
+        s=0.5,
+    )
+    plot_axis.scatter(
+        transform(refiner[0]),
+        refiner[-1],
+        label="Refiner",
+        color=colors["refiner"],
+        alpha=1,
+        s=0.5,
+        zorder=0,
+    )
+
+    # Set labels
+    plot_axis.set_xlabel(r"$\xi$")
+    plot_axis.set_ylabel(r"$w_i$")
+
+    # Add legend
+    handles, labels = plot_axis.get_legend_handles_labels()
+    leg = legend_axis.legend(
+        handles=handles, labels=labels, scatterpoints=100, **legend_kwargs
+    )
+    for lh in leg.legend_handles:
+        lh.set_alpha(1)
+
+    # Save the plot
+    if path is not None:
+        savefig(path)
+
+
 def plot_w2(
     data=None,
     reweighter=None,
