@@ -101,24 +101,42 @@ def resample(*data):
 
 
 class HistoryLogger(tf.keras.callbacks.Callback):
-    def __init__(self, n, val_data=None):
-        self.n = n
+    def __init__(self, log_every_n_batches=None, val_data=None):
+        self.log_every_n_batches = log_every_n_batches
         self.val_data = val_data
         self.history = defaultdict(list)
-        self.counter = 0
+        self.batch_counter = 0
+
+    def perform_validation(self):
+        validation = {}
+        if self.val_data is not None:
+            x_val, y_val, w_val = self.val_data
+            val_loss, val_accuracy = self.model.evaluate(
+                x_val,
+                y_val,
+                sample_weight=w_val,
+                verbose=0,
+            )
+            validation["val_loss"] = val_loss
+            validation["val_accuracy"] = val_accuracy
+        return validation
+
+    def log_to_history(self, logs):
+        for key, value in logs.items():
+            self.history[key].append((self.batch_counter, value))
+        validation = self.perform_validation()
+        for key, value in validation.items():
+            self.history[key].append((self.batch_counter, value))
+
+    def on_epoch_end(self, epoch, logs=None):
+        if self.log_every_n_batches is None:
+            self.log_to_history(logs)
 
     def on_batch_end(self, batch, logs=None):
-        self.counter += 1
-        if self.counter % self.n == 0:
-            for key, value in logs.items():
-                self.history[key].append((self.counter, value))
-            if self.val_data is not None:
-                x_val, y_val, w_val = self.val_data
-                val_loss, val_accuracy = self.model.evaluate(
-                    x_val, y_val, sample_weight=w_val, verbose=0
-                )
-                self.history["val_loss"].append((self.counter, val_loss))
-                self.history["val_accuracy"].append((self.counter, val_accuracy))
+        self.batch_counter += 1
+        if self.log_every_n_batches is not None:
+            if self.batch_counter % self.log_every_n_batches == 0:
+                self.log_to_history(logs)
 
 
 class InfoLogger(tf.keras.callbacks.Callback):
@@ -128,8 +146,7 @@ class InfoLogger(tf.keras.callbacks.Callback):
             lr = optimizer.learning_rate(optimizer.iterations)
         else:
             lr = optimizer.learning_rate
-        print(f'Epoch {epoch+1}, Learning Rate: {lr}')
-
+        print(f"Epoch {epoch+1}, Learning Rate: {lr}")
 
 
 class SimpleModel:
@@ -172,14 +189,13 @@ class SimpleModel:
 
     def fit(self, *args, **kwargs):
         self.logger = HistoryLogger(
-            n=1000,
             val_data=kwargs.get("validation_data"),
         )
         self.model.fit(
             *args,
             **kwargs,
             callbacks=[
-                # self.logger,
+                self.logger,
                 # InfoLogger(),
             ],
         )
