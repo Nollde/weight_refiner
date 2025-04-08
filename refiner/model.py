@@ -124,9 +124,10 @@ class HistoryLogger(tf.keras.callbacks.Callback):
     def log_to_history(self, logs):
         for key, value in logs.items():
             self.history[key].append((self.batch_counter, value))
-        validation = self.perform_validation()
-        for key, value in validation.items():
-            self.history[key].append((self.batch_counter, value))
+        if "val_loss" not in logs and "val_accuracy" not in logs:
+            validation = self.perform_validation()
+            for key, value in validation.items():
+                self.history[key].append((self.batch_counter, value))
 
     def on_epoch_end(self, epoch, logs=None):
         if self.log_every_n_batches is None:
