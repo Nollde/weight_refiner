@@ -1,3 +1,4 @@
+from itertools import combinations
 import os
 
 import numpy as np
@@ -22,6 +23,8 @@ colors = {
     "data": to_color(205, 223, 237),
     "refiner": "green",
     "reweighter": "orange",
+    "positive": to_color(16, 47, 59),
+    "negative": to_color(67, 150, 228),
 }
 
 
@@ -58,7 +61,7 @@ def get_figure(figsize=(8, 7)):
     return fig
 
 
-def get_fig_with_legend(figsize=(8, 7), height_ratios=[0.5, 3]):
+def get_fig_with_legend(figsize=(8, 8), height_ratios=[0.5, 3]):
     # Create a figure
     fig = get_figure(figsize=figsize)
 
@@ -84,6 +87,8 @@ def get_fig_with_legend(figsize=(8, 7), height_ratios=[0.5, 3]):
 
     legend_axis.spines["bottom"].set_visible(False)
     plot_axis.spines["top"].set_visible(False)
+    plot_axis.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
+    plot_axis.get_yaxis().get_offset_text().set_position((-0.1, 0))
     return fig, (legend_axis, plot_axis)
 
 
@@ -116,8 +121,29 @@ def get_fig_with_legend_ratio(figsize=(8, 8), height_ratios=[0.5, 3, 1]):
 
     legend_axis.spines["bottom"].set_visible(False)
     plot_axis.spines["top"].set_visible(False)
-
+    plot_axis.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
+    plot_axis.get_yaxis().get_offset_text().set_position((-0.1, 0))
     return fig, (legend_axis, plot_axis, ratio_axis)
+
+
+def auto_log_yaxis(bin_contents, threshold_proportion=0.2, threshold_ratio=1 / 100):
+    # Calculate the maximum value in the dataset
+    max_value = np.max(bin_contents)
+
+    # Calculate the threshold value
+    threshold_value = max_value * threshold_ratio
+
+    # remove empty bins
+    bin_contents = bin_contents[bin_contents > 0]
+
+    # Count the number of events that have a value less than the threshold value
+    num_small_values = np.sum(bin_contents < threshold_value)
+
+    # Check if the proportion of events that have a value less than the threshold value is greater than or equal to the threshold proportion
+    if num_small_values / len(bin_contents) >= threshold_proportion:
+        return True
+    else:
+        return False
 
 
 def plot_raw(data=None, bins=100, transform=lambda x: x[:, 0], path=None):
@@ -126,11 +152,11 @@ def plot_raw(data=None, bins=100, transform=lambda x: x[:, 0], path=None):
     fig, (legend_axis, plot_axis) = get_fig_with_legend()
 
     # Plot the data
-    _, _, ___ = plot_axis.hist(
+    counts, bins, ___ = plot_axis.hist(
         transform(np.concatenate([pos, neg])),
         weights=np.concatenate([pos_weights, neg_weights]),
         bins=bins,
-        label="Effective",
+        label="All",
         color=colors["data"],
     )
     _, _, ___ = plot_axis.hist(
@@ -138,7 +164,7 @@ def plot_raw(data=None, bins=100, transform=lambda x: x[:, 0], path=None):
         weights=pos_weights,
         bins=bins,
         label="Positive",
-        color=colors["refiner"],
+        color=colors["positive"],
         histtype="step",
     )
     _, __, ___ = plot_axis.hist(
@@ -146,7 +172,7 @@ def plot_raw(data=None, bins=100, transform=lambda x: x[:, 0], path=None):
         weights=neg_weights,
         bins=bins,
         label="Negative",
-        color=colors["reweighter"],
+        color=colors["negative"],
         histtype="step",
     )
 
@@ -198,6 +224,7 @@ def plot_n_ratio(
         label="Refiner",
         color=colors["refiner"],
         histtype="step",
+        alpha=0.5,
     )
 
     # Set labels
@@ -252,6 +279,7 @@ def plot_n_ratio(
         yerr=ratio_refiner_err,
         linestyle="none",
         color=colors["refiner"],
+        alpha=0.5,
     )
 
     # Plot arrows for out-of-range values
@@ -259,6 +287,10 @@ def plot_n_ratio(
         [ratio_reweighter, ratio_refiner], [colors["reweighter"], colors["refiner"]]
     ):
         for i, y in enumerate(ratio):
+            if y <= 0 or np.isinf(y) or np.isnan(y):
+                # Skip when one distribution is empty
+                # Skip when ratio is negative
+                continue
             if y > ratio_y_range[1]:
                 ratio_axis.plot(
                     bin_centers[i],
@@ -303,7 +335,7 @@ def plot_n_ratio_multi(
 ):
     # Create the Figure
     fig, (legend_axis, plot_axis, ratio_axis) = get_fig_with_legend_ratio(
-        height_ratios=[0.5, 2, 2]
+        height_ratios=[0.5, 3, 2]
     )
 
     def get_histograms(datas, *args, **kwargs):
@@ -355,7 +387,11 @@ def plot_n_ratio_multi(
         label="Refiner",
         color=colors["refiner"],
         where="pre",
+        alpha=0.5,
     )
+
+    if auto_log_yaxis(mean_data):
+        plot_axis.set_yscale("log")
 
     # Set labels
     plot_axis.set_ylabel(r"$\Sigma_i w_i$")
@@ -366,7 +402,7 @@ def plot_n_ratio_multi(
 
     # ratio plot
     data_stat_err = hist_data_w2**0.5
-    data_stat_err_rel = safe_divide(data_stat_err, mean_data)
+    data_stat_err_rel = safe_divide(data_stat_err, np.abs(mean_data))
 
     bin_centers = 0.5 * (bins[:-1] + bins[1:])
     ratio_axis.errorbar(
@@ -412,10 +448,15 @@ def plot_n_ratio_multi(
     )
 
     # Plot arrows for out-of-range values
-    for ratio, color in zip(
-        [ratio_reweighter, ratio_refiner], [colors["reweighter"], colors["refiner"]]
-    ):
+    for ratio, color in [
+        [ratio_reweighter, colors["reweighter"]],
+        [ratio_refiner, colors["refiner"]],
+    ]:
         for i, y in enumerate(ratio):
+            if y <= 0 or np.isinf(y) or np.isnan(y):
+                # Skip when one distribution is empty
+                # Skip when ratio is negative
+                continue
             if y > ratio_y_range[1]:
                 ratio_axis.plot(
                     bin_centers[i],
@@ -469,6 +510,7 @@ def plot_w(data=None, reweighter=None, refiner=None, bins=100, path=None):
         label="Refiner",
         color=colors["refiner"],
         histtype="step",
+        alpha=0.5,
     )
 
     # Set labels
@@ -666,6 +708,7 @@ def plot_w2(
         color=colors["refiner"],
         linestyle="None",
         marker="x",
+        alpha=0.5,
     )
 
     # Set labels
@@ -681,22 +724,34 @@ def plot_w2(
         savefig(path)
 
 
-def plot_training(history, title="", path=None):
+def plot_training(history, title=None, plot_batches=False, path=None):
     # Create the Figure
     fig, (legend_axis, plot_axis) = get_fig_with_legend()
+    steps, loss = zip(*history["loss"])
+    steps, val_loss = zip(*history["val_loss"])
+    if not plot_batches:
+        steps = np.arange(len(steps))
 
-    plot_axis.plot(*zip(*history["loss"]), label="train")
-    plot_axis.plot(*zip(*history["val_loss"]), label="val")
+    plot_axis.plot(steps, loss, label="Training")
+    plot_axis.plot(steps, val_loss, label="Validation")
 
-    fig.suptitle(title)
 
     # Set labels
-    plot_axis.set_xlabel("Epoch")
+    if plot_batches:
+        plot_axis.set_xlabel("Batch")
+    else:
+        plot_axis.set_xlabel("Epoch")
     plot_axis.set_ylabel("Loss")
+
+    if plot_batches:
+        plt.xticks(rotation=45)
+
+    # Scientific notation to auto for train plots
+    plot_axis.ticklabel_format(axis="y", style="plain")
 
     # Add legend
     handles, labels = plot_axis.get_legend_handles_labels()
-    legend_axis.legend(handles=handles, labels=labels, **legend_kwargs)
+    legend_axis.legend(title=title, handles=handles, labels=labels, **legend_kwargs)
 
     # Save the plot
     if path is not None:
