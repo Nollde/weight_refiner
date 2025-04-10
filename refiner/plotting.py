@@ -146,21 +146,32 @@ def auto_log_yaxis(bin_contents, threshold_proportion=0.2, threshold_ratio=1 / 1
         return False
 
 
-def plot_raw(data=None, bins=100, transform=lambda x: x[:, 0], path=None):
+def plot_raw(
+    data=None,
+    bins=100,
+    transform=lambda x: x[:, 0],
+    xlabel=r"$\xi$",
+    path=None,
+):
     pos, neg, pos_weights, neg_weights = data
     # Create the Figure
     fig, (legend_axis, plot_axis) = get_fig_with_legend()
 
+    # Clip the values to the range of the bins
+    clip = lambda data: (
+        data if isinstance(bins, int) else np.clip(data, bins[0], bins[-1])
+    )
+
     # Plot the data
     counts, bins, ___ = plot_axis.hist(
-        transform(np.concatenate([pos, neg])),
+        clip(transform(np.concatenate([pos, neg]))),
         weights=np.concatenate([pos_weights, neg_weights]),
         bins=bins,
         label="All",
         color=colors["data"],
     )
     _, _, ___ = plot_axis.hist(
-        transform(pos),
+        clip(transform(pos)),
         weights=pos_weights,
         bins=bins,
         label="Positive",
@@ -168,7 +179,7 @@ def plot_raw(data=None, bins=100, transform=lambda x: x[:, 0], path=None):
         histtype="step",
     )
     _, __, ___ = plot_axis.hist(
-        transform(neg),
+        clip(transform(neg)),
         weights=neg_weights,
         bins=bins,
         label="Negative",
@@ -177,7 +188,7 @@ def plot_raw(data=None, bins=100, transform=lambda x: x[:, 0], path=None):
     )
 
     # Set labels
-    plot_axis.set_xlabel(r"$\xi$")
+    plot_axis.set_xlabel(xlabel)
     plot_axis.set_ylabel(r"$\Sigma_i w_i$")
 
     # Add legend
@@ -196,21 +207,27 @@ def plot_n_ratio(
     bins=100,
     transform=lambda x: x[:, 0],
     ratio_y_range=(0.8, 1.2),
+    xlabel=r"$\xi$",
     path=None,
 ):
     # Create the Figure
     fig, (legend_axis, plot_axis, ratio_axis) = get_fig_with_legend_ratio()
 
+    # Clip the values to the range of the bins
+    clip = lambda data: (
+        data if isinstance(bins, int) else np.clip(data, bins[0], bins[-1])
+    )
+
     # Plot the data
     hist_data, bins, __ = plot_axis.hist(
-        transform(data[0]),
+        clip(transform(data[0])),
         weights=data[-1],
         bins=bins,
         label="Data",
         color=colors["data"],
     )
     hist_reweighter, _, __ = plot_axis.hist(
-        transform(reweighter[0]),
+        clip(transform(reweighter[0])),
         weights=reweighter[-1],
         bins=bins,
         label="Reweighter",
@@ -218,7 +235,7 @@ def plot_n_ratio(
         histtype="step",
     )
     hist_refiner, _, __ = plot_axis.hist(
-        transform(refiner[0]),
+        clip(transform(refiner[0])),
         weights=refiner[-1],
         bins=bins,
         label="Refiner",
@@ -241,17 +258,17 @@ def plot_n_ratio(
 
     # Calculate w2 histograms
     hist_data_w2, bins = np.histogram(
-        transform(data[0]),
+        clip(transform(data[0])),
         weights=data[-1] ** 2,
         bins=bins,
     )
     hist_reweighter_w2, _ = np.histogram(
-        transform(reweighter[0]),
+        clip(transform(reweighter[0])),
         weights=reweighter[-1] ** 2,
         bins=bins,
     )
     hist_refiner_w2, _ = np.histogram(
-        transform(refiner[0]),
+        clip(transform(refiner[0])),
         weights=refiner[-1] ** 2,
         bins=bins,
     )
@@ -315,7 +332,7 @@ def plot_n_ratio(
     ratio_axis.axhline(y=1, linewidth=2, color="gray")
 
     # Set labels
-    ratio_axis.set_xlabel(r"$\xi$")
+    ratio_axis.set_xlabel(xlabel)
     ratio_axis.set_ylabel("Ratio")
 
     # Save the plot
@@ -331,6 +348,7 @@ def plot_n_ratio_multi(
     transform=lambda x: x[:, 0],
     ratio_unc="hilo",
     ratio_y_range=(0.9, 1.1),
+    xlabel=r"$\xi$",
     path=None,
 ):
     # Create the Figure
@@ -338,11 +356,16 @@ def plot_n_ratio_multi(
         height_ratios=[0.5, 3, 2]
     )
 
+    # Clip the values to the range of the bins
+    clip = lambda data: (
+        data if isinstance(bins, int) else np.clip(data, bins[0], bins[-1])
+    )
+
     def get_histograms(datas, *args, **kwargs):
         hists = []
         for data in datas:
             hist, bins = np.histogram(
-                transform(data[0]),
+                clip(transform(data[0])),
                 weights=data[-1],
                 *args,
                 **kwargs,
@@ -353,7 +376,7 @@ def plot_n_ratio_multi(
     hist_data = get_histograms([data], bins=bins)
     # Calculate w2 histograms
     hist_data_w2, bins = np.histogram(
-        transform(data[0]),
+        clip(transform(data[0])),
         weights=data[-1] ** 2,
         bins=bins,
     )
@@ -478,7 +501,7 @@ def plot_n_ratio_multi(
     ratio_axis.set_ylim(ratio_y_range)
 
     # Set labels
-    ratio_axis.set_xlabel(r"$\xi$")
+    ratio_axis.set_xlabel(xlabel)
     ratio_axis.set_ylabel("Ratio")
 
     # Save the plot
@@ -490,22 +513,27 @@ def plot_w(data=None, reweighter=None, refiner=None, bins=100, path=None):
     # Create the Figure
     fig, (legend_axis, plot_axis) = get_fig_with_legend()
 
+    # Clip the values to the range of the bins
+    clip = lambda data: (
+        data if isinstance(bins, int) else np.clip(data, bins[0], bins[-1])
+    )
+
     # Plot the weights
     _, bins, __ = plot_axis.hist(
-        data[-1],
+        clip(data[-1]),
         bins=bins,
         label="Data",
         color=colors["data"],
     )
     _, __, ___ = plot_axis.hist(
-        reweighter[-1],
+        clip(reweighter[-1]),
         bins=bins,
         label="Reweighter",
         color=colors["reweighter"],
         histtype="step",
     )
     _, __, ___ = plot_axis.hist(
-        refiner[-1],
+        clip(refiner[-1]),
         bins=bins,
         label="Refiner",
         color=colors["refiner"],
@@ -532,6 +560,7 @@ def plot_w_2d_hist(
     bins=100,
     transform=lambda x: x[:, 0],
     path=None,
+    xlabel=r"$\xi$",
 ):
     weight_bins = np.arange(0.0, 1.4, 0.1)
     fig, (legend_axis, plot_axis) = get_fig_with_legend()
@@ -567,7 +596,7 @@ def plot_w_2d_hist(
     )
 
     # Set labels
-    plot_axis.set_xlabel(r"$\xi$")
+    plot_axis.set_xlabel(xlabel)
     plot_axis.set_ylabel(r"$w_i$")
 
     # Create proxy artists for the hist2d
@@ -592,6 +621,9 @@ def plot_w_2d_scatter(
     transform=lambda x: x[:, 0],
     path=None,
     n_max=None,
+    xlim=None,
+    ylim=None,
+    xlabel=r"$\xi$",
 ):
     # Limit the number of points to plot
     n_max = int(n_max) if n_max is not None else None
@@ -633,8 +665,15 @@ def plot_w_2d_scatter(
     )
 
     # Set labels
-    plot_axis.set_xlabel(r"$\xi$")
+    plot_axis.set_xlabel(xlabel)
     plot_axis.set_ylabel(r"$w_i$")
+
+    # set axes range
+    if xlim is not None:
+        plt.xlim(xlim)
+
+    if ylim is not None:
+        plt.ylim(ylim)
 
     # Add legend
     handles, labels = plot_axis.get_legend_handles_labels()
@@ -660,19 +699,24 @@ def plot_w2(
     # Create the Figure
     fig, (legend_axis, plot_axis) = get_fig_with_legend()
 
+    # Clip the values to the range of the bins
+    clip = lambda data: (
+        data if isinstance(bins, int) else np.clip(data, bins[0], bins[-1])
+    )
+
     # Calculate w2 histograms
     hist_data_w2, bins = np.histogram(
-        transform(data[0]),
+        clip(transform(data[0])),
         weights=data[-1] ** 2,
         bins=bins,
     )
     hist_reweighter_w2, _ = np.histogram(
-        transform(reweighter[0]),
+        clip(transform(reweighter[0])),
         weights=reweighter[-1] ** 2,
         bins=bins,
     )
     hist_refiner_w2, _ = np.histogram(
-        transform(refiner[0]),
+        clip(transform(refiner[0])),
         weights=refiner[-1] ** 2,
         bins=bins,
     )
@@ -734,7 +778,6 @@ def plot_training(history, title=None, plot_batches=False, path=None):
 
     plot_axis.plot(steps, loss, label="Training")
     plot_axis.plot(steps, val_loss, label="Validation")
-
 
     # Set labels
     if plot_batches:
