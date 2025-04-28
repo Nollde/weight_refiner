@@ -13,6 +13,7 @@ mpl.rcParams["lines.linewidth"] = 2
 mpl.rcParams["patch.linewidth"] = 2
 mpl.rcParams["font.family"] = "serif"
 mpl.rcParams["font.size"] = "18"
+plt.rcParams["mathtext.fontset"] = "dejavuserif"
 
 
 def to_color(*rgb):
@@ -150,7 +151,7 @@ def plot_raw(
     data=None,
     bins=100,
     transform=lambda x: x[:, 0],
-    xlabel=r"$\xi$",
+    xlabel=r"$x$",
     path=None,
 ):
     pos, neg, pos_weights, neg_weights = data
@@ -207,7 +208,7 @@ def plot_n_ratio(
     bins=100,
     transform=lambda x: x[:, 0],
     ratio_y_range=(0.8, 1.2),
-    xlabel=r"$\xi$",
+    xlabel=r"$x$",
     path=None,
 ):
     # Create the Figure
@@ -348,7 +349,7 @@ def plot_n_ratio_multi(
     transform=lambda x: x[:, 0],
     ratio_unc="hilo",
     ratio_y_range=(0.9, 1.1),
-    xlabel=r"$\xi$",
+    xlabel=r"$x$",
     path=None,
 ):
     # Create the Figure
@@ -560,7 +561,7 @@ def plot_w_2d_hist(
     bins=100,
     transform=lambda x: x[:, 0],
     path=None,
-    xlabel=r"$\xi$",
+    xlabel=r"$x$",
 ):
     weight_bins = np.arange(0.0, 1.4, 0.1)
     fig, (legend_axis, plot_axis) = get_fig_with_legend()
@@ -623,7 +624,7 @@ def plot_w_2d_scatter(
     n_max=None,
     xlim=None,
     ylim=None,
-    xlabel=r"$\xi$",
+    xlabel=r"$x$",
 ):
     # Limit the number of points to plot
     n_max = int(n_max) if n_max is not None else None
@@ -694,6 +695,7 @@ def plot_w2(
     refiner=None,
     bins=100,
     transform=lambda x: x[:, 0],
+    xlabel=r"$x$",
     path=None,
 ):
     # Create the Figure
@@ -756,7 +758,7 @@ def plot_w2(
     )
 
     # Set labels
-    plot_axis.set_xlabel(r"$\xi$")
+    plot_axis.set_xlabel(xlabel)
     plot_axis.set_ylabel(r"$\sqrt{\Sigma_i w_i^2}$")
 
     # Add legend
