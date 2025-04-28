@@ -644,7 +644,7 @@ def plot_w_2d_scatter(
             data[-1],
             label="Data",
             color=colors["data"],
-            s=0.5,
+            s=4,
             zorder=0,
         )
     plot_axis.scatter(
@@ -652,7 +652,7 @@ def plot_w_2d_scatter(
         reweighter[-1],
         label="Reweighter",
         color=colors["reweighter"],
-        s=0.5,
+        s=4,
     )
     plot_axis.scatter(
         transform(refiner[0]),
@@ -660,7 +660,7 @@ def plot_w_2d_scatter(
         label="Refiner",
         color=colors["refiner"],
         alpha=1,
-        s=0.5,
+        s=4,
         zorder=0,
     )
 
