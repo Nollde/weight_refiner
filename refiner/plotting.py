@@ -275,8 +275,8 @@ def plot_n_ratio(
     )
 
     # Turn w2 histograms into errors
-    reweighter_err = (hist_data_w2 + hist_reweighter_w2) ** 0.5
-    refiner_err = (hist_data_w2 + hist_refiner_w2) ** 0.5
+    reweighter_err = (hist_data_w2 * safe_divide(hist_reweighter, hist_data)**2 + hist_reweighter_w2) ** 0.5
+    refiner_err = (hist_data_w2 * safe_divide(hist_refiner, hist_data)**2 + hist_refiner_w2) ** 0.5
 
     # Take relative errors
     ratio_reweighter_err = safe_divide(reweighter_err, np.abs(hist_data))
@@ -362,31 +362,42 @@ def plot_n_ratio_multi(
         data if isinstance(bins, int) else np.clip(data, bins[0], bins[-1])
     )
 
-    def get_histograms(datas, *args, **kwargs):
+    def get_histograms(datas, weight_transform=lambda x: x, *args, **kwargs):
         hists = []
         for data in datas:
             hist, bins = np.histogram(
                 clip(transform(data[0])),
-                weights=data[-1],
+                weights=weight_transform(data[-1]),
                 *args,
                 **kwargs,
             )
             hists.append(hist)
         return np.array(hists)
 
-    hist_data = get_histograms([data], bins=bins)
-    # Calculate w2 histograms
-    hist_data_w2, bins = np.histogram(
+    # get binning
+    _, bins = np.histogram(
         clip(transform(data[0])),
-        weights=data[-1] ** 2,
+        weights=data[-1],
         bins=bins,
     )
+
+    # get histograms
+    hist_data = get_histograms([data], bins=bins)
     hist_reweighters = get_histograms(reweighter, bins=bins)
     hist_refiners = get_histograms(refiner, bins=bins)
-
+    
     mean_data = np.mean(hist_data, axis=0)
     mean_reweighters = np.mean(hist_reweighters, axis=0)
     mean_refiners = np.mean(hist_refiners, axis=0)
+    
+    # Calculate w2 histograms
+    hist_data_w2 = get_histograms([data], bins=bins, weight_transform=lambda x: x**2)
+    hist_reweighters_w2 = get_histograms(reweighter, bins=bins, weight_transform=lambda x: x**2)
+    hist_refiners_w2 = get_histograms(refiner, bins=bins, weight_transform=lambda x: x**2)
+    
+    mean_data_w2 = np.mean(hist_data_w2, axis=0)
+    mean_reweighters_w2 = np.mean(hist_reweighters_w2, axis=0)
+    mean_refiners_w2 = np.mean(hist_refiners_w2, axis=0)
 
     # main plot
     plot_axis.bar(
@@ -424,15 +435,20 @@ def plot_n_ratio_multi(
     handles, labels = plot_axis.get_legend_handles_labels()
     legend_axis.legend(handles=handles, labels=labels, **legend_kwargs)
 
-    # ratio plot
-    data_stat_err = hist_data_w2**0.5
-    data_stat_err_rel = safe_divide(data_stat_err, np.abs(mean_data))
+    # Turn w2 histograms into errors
+    reweighter_err = (mean_data_w2 * safe_divide(mean_reweighters, mean_data)**2 + mean_reweighters_w2) ** 0.5
+    refiner_err = (mean_data_w2 * safe_divide(mean_refiners, mean_data)**2 + mean_refiners_w2) ** 0.5
+
+    # Take relative errors
+    ratio_reweighter_err = safe_divide(reweighter_err, np.abs(mean_data))
+    ratio_refiner_err = safe_divide(refiner_err, np.abs(mean_data))
+    ratio_err = np.maximum(ratio_reweighter_err, ratio_refiner_err)  # Use the maximum error for the ratio
 
     bin_centers = 0.5 * (bins[:-1] + bins[1:])
     ratio_axis.errorbar(
         bin_centers,
         np.ones_like(bin_centers),
-        yerr=data_stat_err_rel,
+        yerr=ratio_err,
         color=colors["data"],
         zorder=0,
     )
@@ -648,22 +664,24 @@ def plot_w_2d_scatter(
             s=4,
             zorder=0,
         )
-    plot_axis.scatter(
-        transform(reweighter[0]),
-        reweighter[-1],
-        label="Reweighter",
-        color=colors["reweighter"],
-        s=4,
-    )
-    plot_axis.scatter(
-        transform(refiner[0]),
-        refiner[-1],
-        label="Refiner",
-        color=colors["refiner"],
-        alpha=1,
-        s=4,
-        zorder=0,
-    )
+    if reweighter:
+        plot_axis.scatter(
+            transform(reweighter[0]),
+            reweighter[-1],
+            label="Reweighter",
+            color=colors["reweighter"],
+            s=4,
+        )
+    if refiner:
+        plot_axis.scatter(
+            transform(refiner[0]),
+            refiner[-1],
+            label="Refiner",
+            color=colors["refiner"],
+            alpha=1,
+            s=4,
+            zorder=0,
+        )
 
     # Set labels
     plot_axis.set_xlabel(xlabel)
