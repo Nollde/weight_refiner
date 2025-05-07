@@ -7,8 +7,7 @@ The approach introduces a novel method for transforming sample weights in a weig
 
 The method is detailed in the paper:
 
-> **Stay Positive: Neural Refinement of Sample Weights**
-> [arXiv\:2505.03724](https://arxiv.org/abs/2505.03724))
+> **Stay Positive: Neural Refinement of Sample Weights** [arXiv\:2505.03724](https://arxiv.org/abs/2505.03724)
 
 ## 🧪 Usage
 
