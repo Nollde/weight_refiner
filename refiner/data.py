@@ -27,6 +27,9 @@ def create_data_gaussian(
     pos_weights = np.random.normal(loc=1, scale=weight_scale, size=n_pos)
     neg_weights = np.random.normal(loc=neg_weight, scale=weight_scale, size=n_neg)
 
+    assert np.all(pos_weights > 0, "Some positive weights are negative, is the spread to large?")
+    assert np.all(neg_weights < 0, "Some negative weights are positive, is the spread to large?")
+
     return pos, neg, pos_weights, neg_weights
 
 
@@ -45,6 +48,9 @@ def create_data_function(n_pos, n_neg=0, shape=(1,), function_pos=lambda x: x, f
     pos_weights = function_pos(pos[:, 0])
     neg = np.random.uniform(0, 3, size=(n_neg,) + shape)
     neg_weights = function_neg(neg[:, 0])
+
+    assert np.all(pos_weights > 0, "Some positive weights are negative")
+    assert np.all(neg_weights < 0, "Some negative weights are positive")
 
     return pos, neg, pos_weights, neg_weights
 
@@ -65,6 +71,9 @@ def load_data_tt(n_jets=1):
 
     pos_weights = w[pos_mask]
     neg_weights = w[neg_mask]
+
+    assert np.all(pos_weights > 0, "Some positive weights are negative")
+    assert np.all(neg_weights < 0, "Some negative weights are positive")
 
     return pos, neg, pos_weights, neg_weights
 
