@@ -9,10 +9,10 @@ from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
 
 
-mpl.rcParams["lines.linewidth"] = 2
-mpl.rcParams["patch.linewidth"] = 2
+mpl.rcParams["lines.linewidth"] = 3
+mpl.rcParams["patch.linewidth"] = 3
 mpl.rcParams["font.family"] = "serif"
-mpl.rcParams["font.size"] = "18"
+mpl.rcParams["font.size"] = "19"
 plt.rcParams["mathtext.fontset"] = "dejavuserif"
 
 
@@ -90,6 +90,7 @@ def get_fig_with_legend(figsize=(8, 8), height_ratios=[0.5, 3]):
     plot_axis.spines["top"].set_visible(False)
     plot_axis.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
     plot_axis.get_yaxis().get_offset_text().set_position((-0.1, 0))
+    plt.margins(y=0.1)
     return fig, (legend_axis, plot_axis)
 
 
@@ -124,6 +125,7 @@ def get_fig_with_legend_ratio(figsize=(8, 8), height_ratios=[0.5, 3, 1]):
     plot_axis.spines["top"].set_visible(False)
     plot_axis.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
     plot_axis.get_yaxis().get_offset_text().set_position((-0.1, 0))
+    plt.margins(y=0.1)
     return fig, (legend_axis, plot_axis, ratio_axis)
 
 
@@ -745,33 +747,30 @@ def plot_w2(
     data_err = hist_data_w2**0.5
     reweighter_err = hist_reweighter_w2**0.5
     refiner_err = hist_refiner_w2**0.5
-
-    bin_centers = 0.5 * (bins[:-1] + bins[1:])
-
-    # Plot the errors
-    plot_axis.fill_between(
-        bin_centers,
+    
+    # main plot
+    plot_axis.bar(
+        bins[:-1],
         data_err,
+        width=bins[1:] - bins[:-1],
         label="Data",
         color=colors["data"],
-        step="mid",
+        align="edge",
     )
 
-    plot_axis.plot(
-        bin_centers,
-        reweighter_err,
+    plot_axis.step(
+        bins,
+        np.concatenate(([0], reweighter_err)),
         label="Reweighter",
         color=colors["reweighter"],
-        linestyle="None",
-        marker="o",
+        where="pre",
     )
-    plot_axis.plot(
-        bin_centers,
-        refiner_err,
+    plot_axis.step(
+        bins,
+        np.concatenate(([0], refiner_err)),
         label="Refiner",
         color=colors["refiner"],
-        linestyle="None",
-        marker="x",
+        where="pre",
         alpha=0.5,
     )
 
