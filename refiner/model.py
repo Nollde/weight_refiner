@@ -1,4 +1,6 @@
+import warnings
 from collections import defaultdict
+
 import numpy as np
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
@@ -81,21 +83,22 @@ def apply_refiner(*data, refiner=None):
     return x, y, w_new
 
 
-def resample(*data):
+def resample(data, data_orig):
     """
     Makes simplifying assumption that all weights are +-1
     to calculate variance (see https://arxiv.org/abs/2007.11586)
     """
     x, y, w = data
-    keep_probability = w**2
+    _, __, w_orig = data_orig
+    keep_probability = w**2 / w_orig**2
     if not np.all(keep_probability <= 1.0):
-        print("WARNING: Probabilities should be <= 1.0")
+        warnings.warn("Probabilities should be <= 1.0")
         keep_probability[keep_probability > 1.0] = 1.0
     keep = np.random.binomial(1, keep_probability) == 1
 
     x = x[keep]
     y = y[keep]
-    w = safe_divide(1.0, w[keep])
+    w = safe_divide(w[keep], keep_probability[keep])
 
     return x, y, w
 
