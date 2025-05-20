@@ -75,7 +75,7 @@ def get_fig_with_legend(figsize=(8, 8), height_ratios=[0.5, 3]):
 
     # Adjust the position of the third subplot to restore some space
     pos2 = gs[1, 0].get_position(fig)
-    pos2.y1 += 0.07  # Adjust this value as needed
+    pos2.y1 += 0.075  # Adjust this value as needed
     plot_axis.set_position(pos2)
 
     # No ticks and labels
@@ -789,7 +789,7 @@ def plot_w2(
 
 def plot_training(history, title=None, plot_batches=False, path=None):
     # Create the Figure
-    fig, (legend_axis, plot_axis) = get_fig_with_legend()
+    fig, (legend_axis, plot_axis) = get_fig_with_legend(height_ratios=[0.57, 3])
     steps, loss = zip(*history["loss"])
     steps, val_loss = zip(*history["val_loss"])
     if not plot_batches:
