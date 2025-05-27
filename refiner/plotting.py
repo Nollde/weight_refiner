@@ -780,6 +780,9 @@ def plot_w2(
 
     # Add legend
     handles, labels = plot_axis.get_legend_handles_labels()
+    handlab = dict(zip(labels, handles))
+    labels = ["Data", "Reweighter", "Refiner"]
+    handles = [handlab[label] for label in labels]
     legend_axis.legend(handles=handles, labels=labels, **legend_kwargs)
 
     # Save the plot
